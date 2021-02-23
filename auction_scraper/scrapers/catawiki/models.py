@@ -45,4 +45,3 @@ class CataWikiAuction(BaseAuction, metaclass=BaseAuctionRelationshipMeta, \
     reserve_price_met = Column(Boolean)
     closed = Column(Boolean)
     sold = Column(Boolean)
-    categories = Column(Text())
