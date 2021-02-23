@@ -131,3 +131,4 @@ dmypy.json
 !/deployment.conf
 
 /data
+/notebooks
