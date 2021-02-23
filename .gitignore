@@ -1,31 +1,3 @@
-# Project specific
-*.conf
-
-# Vim
-.~lock.*
-
-# Git
-*.bak
-
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
-
-# C extensions
-*.so
-
-# Binary files
-*.p
-*.pkl
-*.pickle
-*.db
-
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
 downloads/
 eggs/
 .eggs/
