@@ -66,10 +66,8 @@ class CataWikiAuctionScraper(AbstractAuctionScraper):
 
     currency = 'EUR'
 
-    bidding_api_uri_suffix = \
-            f'/buyer/api/v2/lots/{{}}/bidding?currency_code={currency}'
-    bids_api_uri_suffix = \
-            f'/buyer/api/v1/lots/{{}}/bids?currency={currency}'
+    bidding_api_uri_suffix = f'/buyer/api/v2/lots/{{}}/bidding?currency_code={currency}'
+    bids_api_uri_suffix = f'/buyer/api/v1/lots/{{}}/bids?currency={currency}'
 
     base_bidding_api_uri = urljoin(base_uri, bidding_api_uri_suffix)
     base_bids_api_uri = urljoin(base_uri, bids_api_uri_suffix)
@@ -171,14 +169,15 @@ class CataWikiAuctionScraper(AbstractAuctionScraper):
 
         return auction
 
+    @static
     def __parse_auction_category(self, auction, soup):
         json_script_attrs = {"type": "application/ld+json"}
         breadcrumb_list_json = soup.find("script", attrs=json_script_attrs).string
         breadcrumb_list = json.loads(breadcrumb_list_json)
 
         def extract_categories(cats):
-            categories = dict((cat['item']['name'], cat['item']['@id']) for cat in cats \
-                        if cat['item']['name'] != 'Catawiki')
+            categories = dict((cat['item']['name'], cat['item']['@id']) for cat in cats
+                              if cat['item']['name'] != 'Catawiki')
             return json_dumps_unicode(categories)
 
         fill_in_field(auction, 'categories',
@@ -203,6 +202,7 @@ class CataWikiAuctionScraper(AbstractAuctionScraper):
         auction.uri = uri
         return auction, soup.prettify()
 
+    @static
     def __parse_2020_profile_soup(self, soup):
         # Extract profile attributes
         json_div_attrs = {"data-react-component": "LotsFromSellerSidebar"}
