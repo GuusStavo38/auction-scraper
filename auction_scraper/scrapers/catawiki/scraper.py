@@ -151,7 +151,7 @@ class CataWikiAuctionScraper(AbstractAuctionScraper):
                       default=None,
                       process=lambda t: datetime.fromisoformat(t.rstrip('Z')))
         fill_in_field(auction, 'end_time',
-                      bidding, ('bidding', 'bidding_start_time'),
+                      bidding, ('bidding', 'bidding_end_time'),
                       default=None,
                       process=lambda t: datetime.fromisoformat(t.rstrip('Z')))
         fill_in_field(auction, 'sold',
