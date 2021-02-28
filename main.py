@@ -69,14 +69,23 @@ def main(db_path: str = typer.Argument(..., help='The path of the sqlite databas
     state['backend'] = backend
 
 @app.command()
-def auction(auction: typing.List[str] = typer.Argument(..., help= \
-        'A list of auctions to scrape.  Can specify by auction ID or full URI.')):
+def auction(auction: typing.List[str] = typer.Argument(..., help='A list of auctions to scrape.  Can specify by auction ID or full URI.'),
+            iterate: bool = typer.Option(False, help='Create a loop of auction IDs to scrape.  Requires start and end auction ID in list')):
     """
     Scrapes an auction site auction page.
     """
     scraper = setup()
     exception = False
-    for a in auction:
+
+    if iterate:
+        if len(auction) == 2 and all(id.isdigit() for id in auction) and auction[0] < auction[-1]:
+            auction_scope = [str(i) for i in range(int(auction[0]), int(auction[-1]))]
+        else:
+            raise ValueError('No valid auction ID format provided for iteration')
+    else:
+        auction_scope = auction
+
+    for a in auction_scope:
         try:
             scraper.scrape_auction_to_db(a, state['save_pages'], \
                 state['save_images'])
