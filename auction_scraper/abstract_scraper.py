@@ -218,6 +218,8 @@ class AbstractAuctionScraper():
             raise ValueError('The requested page could not be found')
         return json.loads(r.text)
 
+    # def scrape_
+
     def scrape_auction(self, auction, save_page=False, save_images=False):
         """
         Scrapes an auction page, specified by either a unique auction ID
@@ -264,7 +266,6 @@ class AbstractAuctionScraper():
                 existing_image_paths)))
 
         return auction
-
 
     def scrape_profile(self, profile, save_page=False):
         """
