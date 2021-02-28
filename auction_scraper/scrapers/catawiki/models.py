@@ -18,6 +18,7 @@ from sqlalchemy.types import Text
 from auction_scraper.abstract_models import BaseAuction, BaseProfile, \
     BaseAuctionRelationshipMeta
 
+
 # Define the database models
 class CataWikiProfile(BaseProfile):
     """
@@ -31,9 +32,9 @@ class CataWikiProfile(BaseProfile):
     negative_reviews = Column(Integer)
     location = Column(Text())
 
-class CataWikiAuction(BaseAuction, metaclass=BaseAuctionRelationshipMeta, \
-        profile_table='CataWikiProfile', \
-        profile_table_name='catawiki_profiles'):
+
+class CataWikiAuction(BaseAuction, metaclass=BaseAuctionRelationshipMeta,
+                      profile_table='CataWikiProfile', profile_table_name='catawiki_profiles'):
     """
     The database model for an auction on catawiki.com
     """
@@ -45,4 +46,14 @@ class CataWikiAuction(BaseAuction, metaclass=BaseAuctionRelationshipMeta, \
     reserve_price_met = Column(Boolean)
     closed = Column(Boolean)
     sold = Column(Boolean)
-    categories = Column(Text())
+    themed = Column(Boolean)
+    auction_type_family_id = Column(Integer)
+    auction_type_family_name = Column(String(64))
+    auction_id = Column(Integer)
+    auction_name = Column(String(64))
+    category_L2_id = Column(Integer)
+    category_L2_name = Column(String(32))
+    category_L1_id = Column(Integer)
+    category_L1_name = Column(String(32))
+    category_L0_id = Column(Integer)
+    category_L0_name = Column(String(32))

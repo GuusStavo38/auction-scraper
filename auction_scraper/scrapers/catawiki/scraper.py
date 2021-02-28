@@ -14,6 +14,7 @@ A scraper for catawiki.com
 
 from datetime import datetime
 import json
+import re
 from urllib.parse import urljoin
 
 from auction_scraper.abstract_scraper import AbstractAuctionScraper, \
@@ -169,21 +170,45 @@ class CataWikiAuctionScraper(AbstractAuctionScraper):
 
         return auction
 
-    @static
-    def __parse_auction_category(self, auction, soup):
-        json_script_attrs = {"type": "application/ld+json"}
-        breadcrumb_list_json = soup.find("script", attrs=json_script_attrs).string
-        breadcrumb_list = json.loads(breadcrumb_list_json)
+    @staticmethod
+    def __parse_auction_category(auction, soup):
+        dataLayer = soup.find('script', string=re.compile('dataLayer')).string
+        dataLayer_json = dataLayer[dataLayer.find("[") + 1:dataLayer.find("]")]
+        categories = json.loads(dataLayer_json)
 
-        def extract_categories(cats):
-            categories = dict((cat['item']['name'], cat['item']['@id']) for cat in cats
-                              if cat['item']['name'] != 'Catawiki')
-            return json_dumps_unicode(categories)
-
-        fill_in_field(auction, 'categories',
-                      breadcrumb_list, ('itemListElement', ),
-                      default="{}",
-                      process=extract_categories)
+        fill_in_field(auction, 'themed',
+                      categories, ('ThemedOrRegularAuction',),
+                      default=False, process=lambda t: True if t == 'Themed' else False)
+        fill_in_field(auction, 'auction_type_family_id',
+                      categories, ('auction_type_family_id',),
+                      default=-1)
+        fill_in_field(auction, 'auction_type_family_name',
+                      categories, ('auction_type_family_name',),
+                      default="")
+        fill_in_field(auction, 'auction_id',
+                      categories, ('auction_id',),
+                      default=-1)
+        fill_in_field(auction, 'auction_name',
+                      categories, ('auction_name',),
+                      default="")
+        fill_in_field(auction, 'category_L2_id',
+                      categories, ('category_L2_id',),
+                      default=-1)
+        fill_in_field(auction, 'category_L2_name',
+                      categories, ('category_L2_name',),
+                      default="")
+        fill_in_field(auction, 'category_L1_id',
+                      categories, ('category_L1_id',),
+                      default=-1)
+        fill_in_field(auction, 'category_L1_name',
+                      categories, ('category_L1_name',),
+                      default="")
+        fill_in_field(auction, 'category_L0_id',
+                      categories, ('category_L0_id',),
+                      default=-1)
+        fill_in_field(auction, 'category_L0_name',
+                      categories, ('category_L0_name',),
+                      default="")
 
         return auction
 
@@ -202,8 +227,8 @@ class CataWikiAuctionScraper(AbstractAuctionScraper):
         auction.uri = uri
         return auction, soup.prettify()
 
-    @static
-    def __parse_2020_profile_soup(self, soup):
+    @staticmethod
+    def __parse_2020_profile_soup(soup):
         # Extract profile attributes
         json_div_attrs = {"data-react-component": "LotsFromSellerSidebar"}
         data_json = soup.find("div", attrs=json_div_attrs)['data-props']
