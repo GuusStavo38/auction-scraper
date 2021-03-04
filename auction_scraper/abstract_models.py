@@ -20,14 +20,17 @@ from datetime import datetime
 
 Base = declarative_base()
 
+
 #class BaseAuctionImage(Base, Image):
 #    auction_id = Column(Text(), ForeignKey('base_auction.id'), primary_key=True)
+
 
 class TimestampBase(Base):
     __abstract__ = True
 
     date_created = Column(DateTime,  default=datetime.utcnow, nullable=False)
     date_modified = Column(DateTime,  default=datetime.utcnow, nullable=False)
+
 
 class BaseAuctionRelationshipMeta(DeclarativeMeta):
     def __new__(cls, clsname, bases, namespace, profile_table=None,
@@ -51,6 +54,7 @@ class BaseAuctionRelationshipMeta(DeclarativeMeta):
         super(BaseAuctionRelationshipMeta, cls). \
             __init__(clsname, bases, namespace, **kwargs)
 
+
 class BaseAuction(TimestampBase):
     __abstract__ = True
     __tablename__ = 'base_auction'
@@ -70,6 +74,7 @@ class BaseAuction(TimestampBase):
     # image_paths: colon-separated paths relative to some base path
     image_paths = Column(Text(), nullable=False, default='')
 
+
 class BaseProfile(TimestampBase):
     __abstract__ = True
     __tablename__ = 'base_profile'
@@ -78,3 +83,17 @@ class BaseProfile(TimestampBase):
     name = Column(Text())
     description = Column(Text())
     uri = Column(Text())
+
+
+class BaseBids(TimestampBase):
+    __abstract__ = True
+    __tablename__ = 'base_bids'
+
+    id = Column(Text(), primary_key=True)
+    bidder_name = Column(Text)
+    created_at = Column(DateTime)
+    currency = Column(CurrencyType)
+    bid_amount = Column(String(16))
+    explanation = Column(String(16))
+
+
