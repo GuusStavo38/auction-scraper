@@ -57,3 +57,4 @@ class CataWikiAuction(BaseAuction, metaclass=BaseAuctionRelationshipMeta,
     category_L1_name = Column(String(32))
     category_L0_id = Column(Integer)
     category_L0_name = Column(String(32))
+    likes = Column(Integer)

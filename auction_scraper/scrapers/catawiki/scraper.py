@@ -129,6 +129,9 @@ class CataWikiAuctionScraper(AbstractAuctionScraper):
         fill_in_field(auction, 'expert_estimate_min',
                       meta, ('expertsEstimate', 'min', self.currency),
                       default=-1)
+        fill_in_field(auction, 'likes',
+                      meta, ('favoriteCount',),
+                      default=-1)
 
         return auction
 
