@@ -15,8 +15,8 @@ The database models for data scraped from catawiki.com
 
 from sqlalchemy import Column, Boolean, DateTime, Float, Integer, String
 from sqlalchemy.types import Text
-from auction_scraper.abstract_models import BaseAuction, BaseProfile, \
-    BaseAuctionRelationshipMeta
+from auction_scraper.abstract_models import BaseAuction, BaseProfile, BaseBids, \
+    BaseAuctionRelationshipMeta, BaseBidsRelationshipMeta
 
 
 # Define the database models
@@ -58,3 +58,12 @@ class CataWikiAuction(BaseAuction, metaclass=BaseAuctionRelationshipMeta,
     category_L0_id = Column(Integer)
     category_L0_name = Column(String(32))
     likes = Column(Integer)
+
+
+class CataWikiBids(BaseBids, metaclass=BaseBidsRelationshipMeta, auction_table='CataWikiAuction',
+                   auction_table_name='catawiki_auctions'):
+    """
+    The database model for placed bids on catawiki.com
+    """
+    __tablename__ = 'catawiki_bids'
+    explanation = Column(String(16))

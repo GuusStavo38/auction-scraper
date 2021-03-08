@@ -20,7 +20,7 @@ from urllib.parse import urljoin
 from auction_scraper.abstract_scraper import AbstractAuctionScraper, \
     SearchResult
 from auction_scraper.scrapers.catawiki.models import \
-    CataWikiAuction, CataWikiProfile
+    CataWikiAuction, CataWikiProfile, CataWikiBids
 
 
 def fill_in_field(table, table_field_name,
@@ -59,13 +59,14 @@ class CataWikiAuctionScraper(AbstractAuctionScraper):
     """
     auction_table = CataWikiAuction
     profile_table = CataWikiProfile
+    bids_table = CataWikiBids
     base_uri = 'https://www.catawiki.com'
+    currency = 'EUR'
     auction_suffix = '/l/{}'
     profile_suffix = '/u/{}'
+    bids_suffix = f'/buyer/api/v1/lots/{{}}/bids?currency={currency}&per_page=50&page={{{{}}}}'
     search_suffix = '/buyer/api/v1/search?q={}&page={}'
     backend_name = 'catawiki'
-
-    currency = 'EUR'
 
     bidding_api_uri_suffix = f'/buyer/api/v2/lots/{{}}/bidding?currency_code={currency}'
     bids_api_uri_suffix = f'/buyer/api/v1/lots/{{}}/bids?currency={currency}'
@@ -282,6 +283,40 @@ class CataWikiAuctionScraper(AbstractAuctionScraper):
         # Add the uri to the profile
         profile.uri = uri
         return profile, soup.prettify()
+
+    def __parse_2020_bids_json(self, json, auction):
+        json[meta]
+        bids = json['bids']
+        for bid in bids:
+
+        # Construct the bids object
+        auction_id = auction
+        bids = CataWikiAuction(id=str(auction_id))
+        auction.currency = self.currency
+
+
+        fill_in_field()
+
+        fill_in_field(auction, 'n_bids',
+                      bids, ('meta', 'total'),
+                      default=-1)
+
+    def __parse_bids_page(self, json, auction):
+        # Try various parsing methods until one works
+        try:
+            return self.__parse_2020_bids_json(json,auction)
+        except Exception as e:
+            raise ValueError(f'Could not parse web page: {e}')
+
+    def _scrape_bids_page(self, uri, auction):
+        page = 1
+        json = self._get_json(uri.format(page))
+        while json['bids']:
+            bids = self.__parse_bids_page(json, auction)
+
+        # Add uri to the bids
+        bids.uri = uri
+        return bids
 
     def _scrape_search_page(self, uri):
         data = self._get_json(uri)

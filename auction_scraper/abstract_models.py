@@ -85,6 +85,23 @@ class BaseProfile(TimestampBase):
     uri = Column(Text())
 
 
+class BaseBidsRelationshipMeta(DeclarativeMeta):
+    def __new__(cls, clsname, bases, namespace, auction_table=None, auction_table_name=None):
+        namespace['auction_id'] = Column(Text(), ForeignKey(auction_table_name + '.id'))
+        namespace['auction'] = relationship(auction_table, backref='placed_bids',
+                                            foreign_keys=clsname + '.auction_id')
+        return super(BaseBidsRelationshipMeta, cls). \
+            __new__( cls, clsname, bases, namespace)
+
+    # Must be defined since DeclarativeBase apparently (unlike type)
+    # can't "handle extra keyword arguments gracefully"
+    # https://stackoverflow.com/questions/13762231/how-to-pass-arguments-to-the-metaclass-from-the-class-definition
+    def __init__(cls, clsname, bases, namespace, auction_table=None,
+            auction_table_name=None, **kwargs):
+        super(BaseBidsRelationshipMeta, cls). \
+            __init__(clsname, bases, namespace, **kwargs)
+
+
 class BaseBids(TimestampBase):
     __abstract__ = True
     __tablename__ = 'base_bids'
@@ -92,8 +109,8 @@ class BaseBids(TimestampBase):
     id = Column(Text(), primary_key=True)
     bidder_name = Column(Text)
     created_at = Column(DateTime)
-    currency = Column(CurrencyType)
     bid_amount = Column(String(16))
-    explanation = Column(String(16))
+    currency = Column(CurrencyType)
+
 
 

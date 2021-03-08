@@ -67,17 +67,18 @@ class AbstractAuctionScraper():
     cooldown = None
     cooldown_timestamp = None
 
-    def __init__(self, db_path, data_location=None, base_uri=None, \
-            auction_suffix=None, profile_suffix=None, \
-            search_suffix = None, auction_save_path=None, \
-            profile_save_path=None, search_save_path=None, \
-            image_save_path=None, verbose=False, cooldown=0, **_):
+    def __init__(self, db_path, data_location=None, base_uri=None, auction_suffix=None,
+                 profile_suffix=None, bids_suffix=None, search_suffix=None,
+                 auction_save_path=None, profile_save_path=None, search_save_path=None,
+                 image_save_path=None, verbose=False, cooldown=0, **_):
         self.verbose = verbose
 
         if auction_suffix is not None:
             self.auction_suffix = auction_suffix
         if profile_suffix is not None:
             self.profile_suffix = profile_suffix
+        if bids_suffix is not None:
+            self.bids_suffix = bids_suffix
         if search_suffix is not None:
             self.search_suffix = search_suffix
 
@@ -85,6 +86,7 @@ class AbstractAuctionScraper():
             self.base_uri = base_uri
         self.base_auction_uri = urljoin(self.base_uri, self.auction_suffix)
         self.base_profile_uri = urljoin(self.base_uri, self.profile_suffix)
+        self.base_bids_uri = urljoin(self.base_uri, self.bids_suffix)
         self.base_search_uri = urljoin(self.base_uri, self.search_suffix)
 
         self.cooldown = cooldown
@@ -299,6 +301,23 @@ class AbstractAuctionScraper():
 
         return profile
 
+    def scrape_bids(self, auction):
+        """
+        Scrapes a bidding page, specified by the auction ID. Returns a bidding model containing
+        scraped bids.
+        Returns a BaseBids
+        """
+        if not instance(auction, str):
+            raise ValueError('bids auction must be a str')
+
+        bids_uri = self.base_bids_uri.format(auction) \
+            if not validators.url(auction) else auction
+
+        # get bids page
+        bids = self._scrape_bids_page(bids_uri, auction)
+
+        return bids
+
     def scrape_search(self, query_string, n_results=None, save_page=False,
             save_images=False):
         """
@@ -438,6 +457,9 @@ class AbstractAuctionScraper():
 
     def _scrape_profile_page(self, uri):
         raise NotImplementedError('Subclass implements this')
+
+    def _scrape_bids_page(self, uri, auction):
+        raise NotImplementedEroor('Subclass implements this')
 
     def _generate_search_uri(self, query_string, n_page):
         """
