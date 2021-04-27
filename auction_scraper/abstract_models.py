@@ -20,36 +20,37 @@ from datetime import datetime
 
 Base = declarative_base()
 
-#class BaseAuctionImage(Base, Image):
+
+# class BaseAuctionImage(Base, Image):
 #    auction_id = Column(Text(), ForeignKey('base_auction.id'), primary_key=True)
 
 class TimestampBase(Base):
     __abstract__ = True
 
-    date_created = Column(DateTime,  default=datetime.utcnow, nullable=False)
-    date_modified = Column(DateTime,  default=datetime.utcnow, nullable=False)
+    date_created = Column(DateTime, default=datetime.utcnow, nullable=False)
+    date_modified = Column(DateTime, default=datetime.utcnow, nullable=False)
+
 
 class BaseAuctionRelationshipMeta(DeclarativeMeta):
     def __new__(cls, clsname, bases, namespace, profile_table=None,
-            profile_table_name=None):
-        namespace['seller_id'] = Column(Text(),
-            ForeignKey(profile_table_name + '.id'))
-        namespace['winner_id'] = Column(Text(),
-            ForeignKey(profile_table_name + '.id'))
-        namespace['seller'] = relationship(profile_table, \
-            backref='auctions_sold', foreign_keys=clsname + '.seller_id')
-        namespace['winner'] = relationship(profile_table, \
-            backref='auctions_won', foreign_keys=clsname + '.winner_id')
+                profile_table_name=None):
+        namespace['seller_id'] = Column(Text(), ForeignKey(profile_table_name + '.id'))
+        namespace['winner_id'] = Column(Text(), ForeignKey(profile_table_name + '.id'))
+        namespace['seller'] = relationship(profile_table, backref='auctions_sold',
+                                           foreign_keys=clsname + '.seller_id')
+        namespace['winner'] = relationship(profile_table, backref='auctions_won',
+                                           foreign_keys=clsname + '.winner_id')
         return super(BaseAuctionRelationshipMeta, cls). \
-            __new__( cls, clsname, bases, namespace)
+            __new__(cls, clsname, bases, namespace)
 
     # Must be defined since DeclarativeBase apparently (unlike type)
     # can't "handle extra keyword arguments gracefully"
     # https://stackoverflow.com/questions/13762231/how-to-pass-arguments-to-the-metaclass-from-the-class-definition
-    def __init__(cls, clsname, bases, namespace, profile_table=None,
-            profile_table_name=None, **kwargs):
+    def __init__(cls, clsname, bases, namespace, profile_table=None, profile_table_name=None,
+                 **kwargs):
         super(BaseAuctionRelationshipMeta, cls). \
             __init__(clsname, bases, namespace, **kwargs)
+
 
 class BaseAuction(TimestampBase):
     __abstract__ = True
@@ -69,6 +70,7 @@ class BaseAuction(TimestampBase):
     image_urls = Column(Text())
     # image_paths: colon-separated paths relative to some base path
     image_paths = Column(Text(), nullable=False, default='')
+
 
 class BaseProfile(TimestampBase):
     __abstract__ = True

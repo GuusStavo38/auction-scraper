@@ -24,22 +24,25 @@ from auction_scraper.scrapers.liveauctioneers.scraper import \
 from auction_scraper.scrapers.ebay.scraper import \
     EbayAuctionScraper
 
+
 class Backend(Enum):
     catawiki = 'catawiki'
     ebay = 'ebay'
     liveauctioneers = 'liveauctioneers'
 
+
 # Required because apparently Typer doesn't support Enums that map to classes
 backend_dict = {
-        Backend.catawiki: CataWikiAuctionScraper,
-        Backend.ebay : EbayAuctionScraper,
-        Backend.liveauctioneers: LiveAuctioneersAuctionScraper,
-    }
+    Backend.catawiki: CataWikiAuctionScraper,
+    Backend.ebay: EbayAuctionScraper,
+    Backend.liveauctioneers: LiveAuctioneersAuctionScraper,
+}
 
 app = typer.Typer()
 init_state = {'db_path': None, 'base_uri': None, 'data_location': None,
-        'verbose': None, 'archive_search': False}
+              'verbose': None, 'archive_search': False}
 state = {}
+
 
 def setup():
     if state['backend'] == Backend.catawiki:
@@ -52,14 +55,20 @@ def setup():
         raise ValueError('No valid scraper backend provided')
     return scraper
 
+
 @app.callback()
-def main(db_path: str = typer.Argument(..., help='The path of the sqlite database file to be written to'),
-        backend: Backend = typer.Argument(..., help='The auction scraping backend'),
-        data_location: str = typer.Option(None, help='The path additional image and html data is saved to'),
-        save_images: bool = typer.Option(False, help='Save images to data-location.  Requires --data-location'),
-        save_pages: bool = typer.Option(False, help='Save pages to data-location. Requires --data-location'),
-        verbose: bool = False,
-        base_uri: str = typer.Option(None, help='Override the base url used to resolve the auction site')):
+def main(db_path: str = typer.Argument(...,
+                                       help='The path of the sqlite database file to be written to'),
+         backend: Backend = typer.Argument(..., help='The auction scraping backend'),
+         data_location: str = typer.Option(None,
+                                           help='The path additional image and html data is saved to'),
+         save_images: bool = typer.Option(False,
+                                          help='Save images to data-location.  Requires --data-location'),
+         save_pages: bool = typer.Option(False,
+                                         help='Save pages to data-location. Requires --data-location'),
+         verbose: bool = False,
+         base_uri: str = typer.Option(None,
+                                      help='Override the base url used to resolve the auction site')):
     init_state['db_path'] = db_path
     init_state['data_location'] = data_location
     init_state['verbose'] = verbose
@@ -68,12 +77,18 @@ def main(db_path: str = typer.Argument(..., help='The path of the sqlite databas
     state['save_pages'] = save_pages
     state['backend'] = backend
 
+
 @app.command()
-def auction(auction: typing.List[str] = typer.Argument(..., help='A list of auctions to scrape.  Can specify by auction ID or full URI.'),
-            iterate: bool = typer.Option(False, help='Create a loop of auction IDs to scrape.  Requires start and end auction ID in list')):
+def auction(auction: typing.List[str] = typer.Argument(...,
+                                                       help='A list of auctions to scrape.  Can specify by auction ID or full URI.'),
+            iterate: bool = typer.Option(False,
+                                         help='Create a loop of auction IDs to scrape.  Requires start and end auction ID in list'),
+            cooldown: int = typer.Option(0, help='Time to wait between making requests, in seconds')
+            ):
     """
     Scrapes an auction site auction page.
     """
+    init_state['cooldown'] = cooldown
     scraper = setup()
     exception = False
 
@@ -87,8 +102,7 @@ def auction(auction: typing.List[str] = typer.Argument(..., help='A list of auct
 
     for a in auction_scope:
         try:
-            scraper.scrape_auction_to_db(a, state['save_pages'], \
-                state['save_images'])
+            scraper.scrape_auction_to_db(a, state['save_pages'], state['save_images'])
         except Exception as e:
             exception = True
             if init_state['verbose']:
@@ -97,6 +111,7 @@ def auction(auction: typing.List[str] = typer.Argument(..., help='A list of auct
                 print(colored(e, 'red'))
     if exception:
         sys.exit(1)
+
 
 @app.command()
 def profile(profile: typing.List[str] = typer.Argument(..., help= \
@@ -118,14 +133,15 @@ def profile(profile: typing.List[str] = typer.Argument(..., help= \
     if exception:
         sys.exit(1)
 
+
 @app.command()
 def search(n_results: int = typer.Argument(..., help='The number of results to return'),
-    query_string: typing.List[str] = typer.Argument(..., help='A list of query strings to search for'),
-    archive_search: bool = typer.Option(False, help= \
-        'Search archived auctions instead of live auctions. Only available for the liveauctioneers backend.'),
-    cooldown: int = typer.Option(0, help= \
-        'Time to wait between making requests, in seconds')
-      ):
+           query_string: typing.List[str] = typer.Argument(...,
+                                                           help='A list of query strings to search for'),
+           archive_search: bool = typer.Option(False, help= \
+                   'Search archived auctions instead of live auctions. Only available for the liveauctioneers backend.'),
+           cooldown: int = typer.Option(0, help='Time to wait between making requests, in seconds')
+           ):
     """
     Performs a search, returning the top n_results results for each query_string.
     Scrapes the auction and seller profile for each result.
@@ -136,7 +152,7 @@ def search(n_results: int = typer.Argument(..., help='The number of results to r
     exception = False
     try:
         scraper.scrape_search_to_db(query_string, n_results,
-            state['save_pages'], state['save_images'])
+                                    state['save_pages'], state['save_images'])
     except Exception as e:
         exception = True
         if init_state['verbose']:
@@ -146,9 +162,10 @@ def search(n_results: int = typer.Argument(..., help='The number of results to r
     if exception:
         sys.exit(1)
 
+
 def main():
     app()
 
+
 if __name__ == '__main__':
     main()
-

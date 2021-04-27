@@ -67,7 +67,7 @@ class CataWikiAuctionScraper(AbstractAuctionScraper):
 
     currency = 'EUR'
 
-    bidding_api_uri_suffix = f'/buyer/api/v2/lots/{{}}/bidding?currency_code={currency}'
+    bidding_api_uri_suffix = f'/buyer/api/v3/lots/{{}}/bidding_block?currency_code={currency}'
     bids_api_uri_suffix = f'/buyer/api/v1/lots/{{}}/bids?currency={currency}'
 
     base_bidding_api_uri = urljoin(base_uri, bidding_api_uri_suffix)
@@ -88,7 +88,6 @@ class CataWikiAuctionScraper(AbstractAuctionScraper):
         auction = self.__parse_auction_meta(auction, meta)
         auction = self.__parse_auction_category(auction, soup)
         auction = self.__parse_bidding(auction)
-        auction = self.__parse_bids(auction)
 
         return auction
 
@@ -139,37 +138,32 @@ class CataWikiAuctionScraper(AbstractAuctionScraper):
         bidding = self._get_json(self.base_bidding_api_uri.format(auction.id))
 
         fill_in_field(auction, 'starting_price',
-                      bidding, ('bidding', 'start_bid_amount'),
+                      bidding, ('bidding_block', 'lot', 'start_bid_amount'),
                       default=-1)
         fill_in_field(auction, 'latest_price',
-                      bidding, ('bidding', 'current_bid_amount'),
+                      bidding, ('bidding_block', 'lot', 'highest_bid_amount'),
                       default=-1)
         fill_in_field(auction, 'reserve_price_met',
-                      bidding, ('bidding', 'reserve_price_met'),
+                      bidding, ('bidding_block', 'lot', 'reserve_price_met'),
                       default=False)
         fill_in_field(auction, 'closed',
-                      bidding, ('bidding', 'closed'),
+                      bidding, ('bidding_block', 'lot', 'is_closed'),
                       default=False)
         fill_in_field(auction, 'start_time',
-                      bidding, ('bidding', 'bidding_start_time'),
+                      bidding, ('bidding_block', 'lot', 'planned_start_at'),
                       default=None,
                       process=lambda t: datetime.fromisoformat(t.rstrip('Z')))
         fill_in_field(auction, 'end_time',
-                      bidding, ('bidding', 'bidding_end_time'),
+                      bidding, ('bidding_block', 'lot', 'planned_close_at'),
                       default=None,
                       process=lambda t: datetime.fromisoformat(t.rstrip('Z')))
         fill_in_field(auction, 'sold',
-                      bidding, ('bidding', 'sold'),
+                      bidding, ('bidding_block', 'lot', 'is_sold'),
                       default=False)
-
-        return auction
-
-    def __parse_bids(self, auction):
-        bids = self._get_json(self.base_bids_api_uri.format(auction.id))
-
         fill_in_field(auction, 'n_bids',
-                      bids, ('meta', 'total'),
-                      default=-1)
+                      bidding, ('bidding_block', 'bids'),
+                      default=-1,
+                      process=lambda t: len(t))
 
         return auction
 
@@ -289,7 +283,7 @@ class CataWikiAuctionScraper(AbstractAuctionScraper):
         output = {}
         for result in data['lots']:
             output[str(result['id'])] = \
-                    SearchResult(result['title'], result['url'])
+                SearchResult(result['title'], result['url'])
 
         return output, json_dumps_unicode(data)
 

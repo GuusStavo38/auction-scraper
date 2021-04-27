@@ -25,6 +25,7 @@ import time
 
 from auction_scraper.abstract_models import Base
 
+
 # From https://stackoverflow.com/questions/18092354/python-split-string-without-splitting-escaped-character#21107911
 def _escape_split(s, delim):
     i, res, buf = 0, [], ''
@@ -42,6 +43,7 @@ def _escape_split(s, delim):
         res.append(buf + s[i:j - d])
         i, buf = j + len(delim), ''  # start after delim
 
+
 class UnexpectedPageError(Exception):
     def __init__(self, page):
         self.message = 'Failed to parse page due to unexpected contents. This could be due to the scraper being blocked by anti-scraper measures.'
@@ -50,10 +52,12 @@ class UnexpectedPageError(Exception):
     def __str__(self):
         return f'{self.message}'
 
+
 class SearchResult():
     def __init__(self, name, uri):
         self.name = name
         self.uri = uri
+
 
 class AbstractAuctionScraper():
     # Defined by subclass
@@ -67,11 +71,10 @@ class AbstractAuctionScraper():
     cooldown = None
     cooldown_timestamp = None
 
-    def __init__(self, db_path, data_location=None, base_uri=None, \
-            auction_suffix=None, profile_suffix=None, \
-            search_suffix = None, auction_save_path=None, \
-            profile_save_path=None, search_save_path=None, \
-            image_save_path=None, verbose=False, cooldown=0, **_):
+    def __init__(self, db_path, data_location=None, base_uri=None, auction_suffix=None,
+                 profile_suffix=None, search_suffix=None, auction_save_path=None,
+                 profile_save_path=None, search_save_path=None, image_save_path=None, verbose=False,
+                 cooldown=0, **_):
         self.verbose = verbose
 
         if auction_suffix is not None:
@@ -92,19 +95,17 @@ class AbstractAuctionScraper():
         # Configure default data locations
         if data_location is not None:
             data_location = Path(data_location)
-            self.auction_save_path = data_location \
-                .joinpath(self.backend_name).joinpath('auctions')
-            self.profile_save_path = data_location \
-                .joinpath(self.backend_name).joinpath('profiles')
-            self.search_save_path = data_location \
-                .joinpath(self.backend_name).joinpath('searches')
-            self.image_save_path = data_location \
-                .joinpath(self.backend_name).joinpath('images')
+            self.auction_save_path = data_location.joinpath(self.backend_name).joinpath('auctions')
+            self.profile_save_path = data_location.joinpath(self.backend_name).joinpath('profiles')
+            self.search_save_path = data_location.joinpath(self.backend_name).joinpath('searches')
+            self.image_save_path = data_location.joinpath(self.backend_name).joinpath('images')
         else:
             self.auction_save_path = None
             self.profile_save_path = None
             self.search_save_path = None
             self.image_save_path = None
+
+        # Add
 
         # Override specified data locations
         if auction_save_path is not None:
@@ -132,11 +133,12 @@ class AbstractAuctionScraper():
         self.search_save_name = 'search-{}-{}.html'
 
         if self.auction_table is None or self.profile_table is None:
-            raise ValueError('self.auction_table and self.profile_table must be set in the __init__ method of a subclass of AbstractAuctionScraper')
+            raise ValueError(
+                'self.auction_table and self.profile_table must be set in the __init__ method of a subclass of AbstractAuctionScraper')
 
         # Define the application base directory
         self.engine = create_engine('sqlite:///' + os.path.abspath(db_path), \
-            echo=verbose, connect_args={'timeout': 20})
+                                    echo=verbose, connect_args={'timeout': 20})
         self.Session = sessionmaker(bind=self.engine)
 
         # Create the database tables
@@ -147,7 +149,7 @@ class AbstractAuctionScraper():
         image_paths = []
         for url in image_urls:
             name = f'{self.backend_name}_{auction_id}_' + \
-                '_'.join(urlparse(url).path.split('/'))
+                   '_'.join(urlparse(url).path.split('/'))
             path = self.image_save_path.joinpath(name).resolve()
             image_paths.append(path)
 
@@ -165,6 +167,7 @@ class AbstractAuctionScraper():
         Normalise blocks of text, removing unneccesary whitespace and
         normalising unicode-encoded characters.
         """
+
         # Strips multiple groups of c from s
         def strip_multiple(s, c):
             return c.join(filter(None, s.split(c)))
@@ -255,15 +258,14 @@ class AbstractAuctionScraper():
 
         # Save images if required, updating image_paths
         if save_images:
-            new_image_paths = list(map(str, self._download_images(filter(None, auction.image_urls.split(' ')), auction.id)))
+            new_image_paths = list(map(str, self._download_images(
+                filter(None, auction.image_urls.split(' ')), auction.id)))
             if auction.image_paths is not None:
-                existing_image_paths = _escape_split( \
-                    auction.image_paths, ':')
+                existing_image_paths = _escape_split(auction.image_paths, ':')
             else:
                 existing_image_paths = []
 
-            auction.image_paths = ':'.join(list(set(new_image_paths).union( \
-                existing_image_paths)))
+            auction.image_paths = ':'.join(list(set(new_image_paths).union(existing_image_paths)))
 
         return auction
 
@@ -300,7 +302,7 @@ class AbstractAuctionScraper():
         return profile
 
     def scrape_search(self, query_string, n_results=None, save_page=False,
-            save_images=False):
+                      save_images=False):
         """
         Scrapes a search page, specified by either a query_string and n_results,
         or by a unique URI.
@@ -360,6 +362,18 @@ class AbstractAuctionScraper():
             raise e
         return auction
 
+    def scrape_auction_to_parquet(self, auction, save_page=False, save_images=False):
+        """
+        Scrape an auction page, writing the resulting auction to a parquet file.
+        Returns a BaseAuction
+        """
+        auction = self.scrape_auction(auction, save_page, save_images)
+        data_path = self.auction_save_path.joinpath('data')
+
+        # TODO: finish function to scrape data to parquet files
+
+        return auction
+
     def scrape_profile_to_db(self, profile, save_page=False):
         """
         Scrape a profile page, writing the resulting profile to the database.
@@ -375,8 +389,8 @@ class AbstractAuctionScraper():
             raise e
         return profile
 
-    def scrape_search_to_db(self, query_strings, n_results=None, \
-            save_page=False, save_images=False, cooldown=0):
+    def scrape_search_to_db(self, query_strings, n_results=None, save_page=False, save_images=False,
+                            cooldown=0):
         """
         Scrape a set of query_strings, writing the resulting auctions and profiles
         to the database.
@@ -390,12 +404,13 @@ class AbstractAuctionScraper():
         for query_string in query_strings:
             print(f'Scraping query string {query_string}')
             # Retry the search three times, to deal with transient errors
-            #raise NotImplementedError
+            # raise NotImplementedError
             for i in range(3):
                 try:
-                    results = {**results, \
-                            **self.scrape_search(query_string, n_results, save_page,
-                                save_images)}
+                    results = {**results, **self.scrape_search(query_string,
+                                                               n_results, save_page,
+                                                               save_images)
+                               }
                 except Exception as e:
                     if i == 2:
                         raise e
@@ -412,8 +427,7 @@ class AbstractAuctionScraper():
         for auction_id, search in results.items():
             try:
                 print('Scraping auction url {}'.format(search.uri))
-                auction = self.scrape_auction_to_db(search.uri, save_page, \
-                    save_images)
+                auction = self.scrape_auction_to_db(search.uri, save_page, save_images)
                 auctions.append(auction)
                 profile_id = auction.seller_id
 
